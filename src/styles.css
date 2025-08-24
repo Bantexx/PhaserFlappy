@@ -1,0 +1,31 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    background: #87ceeb;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Ограничиваем игровую область размерами телефона (центруем на ПК).
+     На мобильных устройствах она будет масштабироваться благодаря max-width/max-height. */
+  #game-container {
+    width: 360px;
+    height: 760px;
+    max-width: 100vw;
+    max-height: 100vh;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+  }
+  
+  /* Убираем выделение на кнопках при касании */
+  button.icon {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+  }
