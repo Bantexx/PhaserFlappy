@@ -10,6 +10,11 @@ export default class BootScene extends Phaser.Scene {
     this.load.svg('bg_day', '/src/assets/bg_day.svg');
     this.load.svg('bg_night', '/src/assets/bg_night.svg');
 
+    this.load.svg('background-day', '/src/assets/background-day.svg');
+    this.load.svg('background-night', '/src/assets/background-night.svg');
+    this.load.svg('background-space', '/src/assets/background-space.svg');
+    this.load.svg('background-sunset', '/src/assets/background-sunset.svg');
+
     this.load.svg('bird_red', '/src/assets/bird_red.svg');
     this.load.svg('bird_blue', '/src/assets/bird_blue.svg');
     this.load.svg('bird_green', '/src/assets/bird_green.svg');

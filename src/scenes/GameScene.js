@@ -105,7 +105,72 @@ export default class GameScene extends Phaser.Scene {
   }
 
   getBackgroundKeyForScore() {
-    return this.score < 10 ? 'bg_day' : 'bg_night';
+    // Цикл каждые 40 очков: 0-9 -> morning, 10-19 -> day, 20-29 -> evening, 30-39 -> night
+    const normalized = ((this.score % 40) + 40) % 40; // защитный мод, на случай отрицательных (хотя score >= 0)
+    const phase = Math.floor(normalized / 10); // 0..3
+    switch (phase) {
+      case 0: return 'background-day';
+      case 1: return 'background-sunset';
+      case 2: return 'background-night';
+      case 3: return 'background-space';
+      default: return 'background-day';
+    }
+  }
+
+  // Плавный cross-fade между текущим this.bg и новой текстурой key
+  smoothTransitionBackground(key, duration = 600) {
+    // Уже нужный фон — ничего не делаем
+    if (this.bg && this.bg.texture && this.bg.texture.key === key) return;
+
+    // Если уже идёт переход — аккуратно завершить/отменить его
+    if (this._bgTransitionInProgress) {
+      // убираем промежуточный newBg, убиваем твины и возвращаем bg в видимый вид
+      if (this._bgTransitionInProgress.newBg && !this._bgTransitionInProgress.newBg.destroyed) {
+        this._bgTransitionInProgress.newBg.destroy();
+      }
+      this.tweens.killTweensOf(this.bg);
+      this.bg.setAlpha(1);
+      this._bgTransitionInProgress = null;
+    }
+
+    // Создаём новый спрайт поверх старого, но с alpha 0
+    const newBg = this.add.image(this.w / 2, this.h / 2, key)
+      .setDisplaySize(this.w, this.h)
+      .setOrigin(0.5)
+      .setDepth(0)
+      .setScrollFactor(0)
+      .setAlpha(0);
+
+    // Флаг/контекст текущего перехода (чтобы не стартовать новый пока идёт старый)
+    this._bgTransitionInProgress = { newBg, oldBg: this.bg };
+
+    // Твин для появления нового
+    this.tweens.add({
+      targets: newBg,
+      alpha: 1,
+      duration,
+      ease: 'Sine.Out'
+    });
+
+    // Твин для скрытия старого; в onComplete заменяем this.bg и чистим
+    this.tweens.add({
+      targets: this.bg,
+      alpha: 0,
+      duration,
+      ease: 'Sine.Out',
+      onComplete: () => {
+        // уничтожаем старый спрайт (если он ещё валиден)
+        try {
+          if (this._bgTransitionInProgress && this._bgTransitionInProgress.oldBg && this._bgTransitionInProgress.oldBg !== newBg) {
+            this._bgTransitionInProgress.oldBg.destroy();
+          }
+        } catch (e) { /* silent */ }
+
+        // делаем newBg главным фоном
+        this.bg = newBg;
+        this._bgTransitionInProgress = null;
+      }
+    });
   }
 
   // Более «мягкий» прыжок: прямой импульс + сглаживание угла в update()
@@ -567,6 +632,9 @@ export default class GameScene extends Phaser.Scene {
 
     // Фон по очкам
     const desiredBg = this.getBackgroundKeyForScore();
+    if (!this.bg || this.bg.texture.key !== desiredBg) {
+      this.smoothTransitionBackground(desiredBg, 600); // 600ms — длительность перехода, можно менять
+    }
     if (this.bg.texture.key !== desiredBg) this.bg.setTexture(desiredBg);
   }
 
