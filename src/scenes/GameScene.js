@@ -341,35 +341,68 @@ export default class GameScene extends Phaser.Scene {
     if (b.body) b.body.setVelocityX(0);
   }
 
-  // Рассчитать безопасный Y для бонуса между предыдущей и текущей парами
   computeSafeBonusY(bonusX, prevX, prevGapCenter, currGapCenter) {
     const gapSize = this.gap;
     const margin = Math.round(Math.min(30, gapSize * 0.15));
-
+    const topLimit = Math.round(this.h * 0.05);
+    const spawnAreaTop = Math.round(this.h * 0.05);
+    const spawnAreaBottom = Math.round(this.h * 0.25); // бонусы всё ещё рождаются в верхней части экрана
+  
+    // helper: получить смещённый центр в зависимости от того, верхняя/нижняя треть или нет
+    const computeBiasedCenter = (center) => {
+      if (center == null) return center;
+      const lowerThirdY = this.h * (2 / 3);
+      const upperThirdY = this.h * (1 / 3);
+      // величина смещения — доля от gapSize (настраиваемо)
+      const offset = Math.round(gapSize * 0.35);
+  
+      if (center > lowerThirdY) {
+        // дыра в нижней трети -> бонус чуть выше (меньше Y)
+        return center - offset;
+      } else if (center < upperThirdY) {
+        // дыра в верхней трети -> бонус чуть ниже (больше Y)
+        return center + offset;
+      }
+      // средняя треть -> без смещения
+      return center;
+    };
+  
     if (prevX == null || prevGapCenter == null) {
       const base = currGapCenter || (this.h / 2);
-      // Бонус падает сверху вниз - начинаем с верхней части экрана
-      const minY = Math.max(Math.round(this.h * 0.05), base - gapSize / 2 + margin);
-      const maxY = Math.min(Math.round(this.h * 0.25), base + gapSize / 2 - margin);
-      return Phaser.Math.Between(minY, maxY);
+      const biasedBase = computeBiasedCenter(base);
+  
+      const minY = Math.max(topLimit, Math.round(biasedBase - gapSize / 2 + margin));
+      const maxY = Math.min(spawnAreaBottom, Math.round(biasedBase + gapSize / 2 - margin));
+  
+      if (maxY - minY < 24) {
+        const expand = 40;
+        const rnd = Phaser.Math.Between(-expand, expand);
+        return Phaser.Math.Clamp(Math.round(biasedBase + rnd), spawnAreaTop, spawnAreaBottom);
+      }
+  
+      return Phaser.Math.Between(Math.round(minY), Math.round(maxY));
     }
-
+  
     // Интерполяция по положению X между prevX..currX
     const currX = this.w + Math.max(60, this.pipeWidth);
     const denom = Math.max(1, (currX - prevX));
     const t = Phaser.Math.Clamp((bonusX - prevX) / denom, 0, 1);
     const blendedCenter = Phaser.Math.Interpolation.Linear([prevGapCenter, currGapCenter], t);
-
-    // Бонус падает сверху вниз - ограничиваем верхнюю область
-    const minY = Math.max(Math.round(this.h * 0.05), blendedCenter - gapSize / 2 + margin);
-    const maxY = Math.min(Math.round(this.h * 0.25), blendedCenter + gapSize / 2 - margin);
-
-    // Если интервал деградировал, слегка расширяем
+  
+    // Применяем bias (выше/ниже) относительно blendedCenter
+    const biasedCenter = computeBiasedCenter(blendedCenter);
+  
+    // Ограничиваем область появления бонуса в верхней части экрана, но в пределах отверстия (учитывая margin)
+    const minY = Math.max(topLimit, Math.round(biasedCenter - gapSize / 2 + margin));
+    const maxY = Math.min(spawnAreaBottom, Math.round(biasedCenter + gapSize / 2 - margin));
+  
+    // Если интервал слишком узкий — слегка расширяем выбор вокруг biasedCenter
     if (maxY - minY < 24) {
       const expand = 40;
-      return Phaser.Math.Clamp(Math.round(blendedCenter + Phaser.Math.Between(-expand, expand)), Math.round(this.h * 0.05), Math.round(this.h * 0.25));
+      const rnd = Phaser.Math.Between(-expand, expand);
+      return Phaser.Math.Clamp(Math.round(biasedCenter + rnd), spawnAreaTop, spawnAreaBottom);
     }
-
+  
     return Phaser.Math.Between(Math.round(minY), Math.round(maxY));
   }
 
@@ -678,7 +711,7 @@ export default class GameScene extends Phaser.Scene {
 
   emitHUD() {
     const livesArr = Array.from({ length: Math.max(0, this.livesCount) }, () => 1);
-    EventBus.emit('updateHUD', { score: this.score, lives: livesArr, difficultyName: this.difficulty.name });
+    EventBus.emit('updateHUD', { score: this.score, lives: livesArr, difficultyName: this.difficulty.name, speed: this.pipeSpeed });
   }
 
   togglePause() {

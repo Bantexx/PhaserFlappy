@@ -14,6 +14,8 @@ export default class UIScene extends Phaser.Scene {
 
     this.diffText = this.add.text(12, 36, '', { fontSize: 14, color: '#fff' });
 
+    this.speedText = this.add.text(12, 56, '', { fontSize: 14, color: '#fff' });
+
     this.livesGroup = this.add.group();
 
     this.pauseBtn = this.add.image(w - 40, 30, 'pause_btn').setInteractive({ useHandCursor: true }).setDisplaySize(48, 48);
@@ -31,18 +33,21 @@ export default class UIScene extends Phaser.Scene {
     });
   }
 
-  updateHUD({ score, lives, difficultyName }) {
+  updateHUD({ score, lives, difficultyName, speed }) {
     if (typeof score === 'number') {
       this.scoreText.setText(`Очки: ${score}`);
     }
     if (typeof difficultyName !== 'undefined') {
       this.diffText.setText(`Сложность: ${difficultyName}`);
     }
+    if (typeof speed !== 'undefined') {
+      this.speedText.setText(`Скорость: ${speed}`);
+    }
     if (Array.isArray(lives)) {
       // clear and render lives
       this.livesGroup.clear(true, true);
-      let x = 12;
-      const y = 60;
+      let x = 20;
+      const y = 90;
       lives.forEach((l, i) => {
         const icon = this.add.image(x + i * 26, y, 'life').setDisplaySize(22, 22);
         this.livesGroup.add(icon);
