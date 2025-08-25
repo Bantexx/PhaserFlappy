@@ -9,7 +9,7 @@ export default class SelectScene extends Phaser.Scene {
   create() {
     const w = this.scale.width;
     const h = this.scale.height;
-    this.add.image(w / 2, h / 2, 'bg_day').setDisplaySize(w, h);
+    this.add.image(w / 2, h / 2, 'background-day').setDisplaySize(w, h);
 
     const header = this.add.text(w / 2, h * 0.08, 'Выберите персонажа и сложность', { fontSize: 18, color: '#fff' }).setOrigin(0.5);
 

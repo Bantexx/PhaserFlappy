@@ -9,7 +9,7 @@ export default class MenuScene extends Phaser.Scene {
     const w = this.scale.width;
     const h = this.scale.height;
 
-    this.add.image(w / 2, h / 2, 'bg_day').setDisplaySize(w, h);
+    this.add.image(w / 2, h / 2, 'background-day').setDisplaySize(w, h);
 
     const title = this.add.text(w / 2, h * 0.15, 'FLAPPY MINI', {
       fontSize: Math.round(Math.min(w, h) * 0.07),

@@ -68,7 +68,18 @@ export default class GameScene extends Phaser.Scene {
 
     // Игрок
     this.player = this.physics.add.image(this.w * 0.25, this.h / 2, this.character);
-    this.player.setDisplaySize(Math.round(this.w * 0.11), Math.round(this.h * 0.08));
+    this.player.setDisplaySize(Math.round(this.w * 0.15), Math.round(this.h * 0.08));
+
+    // Настройка хитбокса
+    const hitboxWidth = this.player.displayWidth * 0.8; // 80% от ширины спрайта
+    const hitboxHeight = this.player.displayHeight * 0.6; // 60% от высоты спрайта
+    this.player.body.setSize(hitboxWidth, hitboxHeight);
+
+    // Центрирование хитбокса относительно спрайта
+    const offsetX = (this.player.displayWidth - hitboxWidth);
+    const offsetY = (this.player.displayHeight - hitboxHeight) / 4;
+    this.player.body.setOffset(offsetX, offsetY);
+
     this.player.setCollideWorldBounds(true);
     this.player.body.setAllowGravity(true);
     this.player.body.setGravityY(this._gravity);
@@ -199,10 +210,13 @@ export default class GameScene extends Phaser.Scene {
       // физика (прямоугольники, без визуала)
       const topBody = this.add.rectangle(-2000, -2000, this.pipeWidth, 10, 0xff0000, 0);
       const bottomBody = this.add.rectangle(-2000, -2000, this.pipeWidth, 10, 0xff0000, 0);
+
       this.physics.add.existing(topBody);
       this.physics.add.existing(bottomBody);
+
       topBody.body.setAllowGravity(false);
       topBody.body.setImmovable(true);
+
       bottomBody.body.setAllowGravity(false);
       bottomBody.body.setImmovable(true);
 
@@ -236,11 +250,9 @@ export default class GameScene extends Phaser.Scene {
       this.physics.add.existing(b);
       b.body.setAllowGravity(false);
       b.body.setImmovable(true);
-      // Не смещаем offset — у Arcade Image тело по центру при origin 0.5
-      // b.body.setOffset(...) — НЕ нужно
-
       b.type = null;
       b._spawnTime = 0;
+
       this.bonusPool.push(b);
       this.bonusesGroup.add(b);
     }
@@ -261,15 +273,21 @@ export default class GameScene extends Phaser.Scene {
   }
 
   acquireBonus(type, x, y, velocityX) {
-    let b = this.bonusPool.find(item => !item.active);
-    if (!b) {
-      b = this.add.image(-2000, -2000, type).setVisible(false).setActive(false).setDepth(20).setScrollFactor(1);
-      this.physics.add.existing(b);
-      b.body.setAllowGravity(false);
-      b.body.setImmovable(true);
-      b._spawnTime = 0;
-      this.bonusPool.push(b);
-      this.bonusesGroup.add(b);
+    let bonus = this.bonusPool.find(item => !item.active);
+    if (!bonus) {
+      bonus = this.add.image(-2000, -2000, type)
+        .setVisible(false)
+        .setActive(false)
+        .setDepth(20)
+        .setScrollFactor(1);
+
+      this.physics.add.existing(bonus);
+      bonus.body.setAllowGravity(false);
+      bonus.body.setImmovable(true);
+      bonus._spawnTime = 0;
+
+      this.bonusPool.push(bonus);
+      this.bonusesGroup.add(bonus);
     }
 
     if (!this.textures.exists(type)) {
@@ -277,37 +295,37 @@ export default class GameScene extends Phaser.Scene {
       type = 'bonus_life';
     }
 
-    b.setTexture(type);
-    const desired = Math.round(this.pipeWidth * 0.45);
+    bonus.setTexture(type);
+    const desired = Math.round(this.pipeWidth * 0.65);
     const src = this.getTextureSourceSize(type);
     const srcMax = Math.max(src.w || 1, src.h || 1);
     const scale = desired / srcMax;
     const finalW = Math.round((src.w || desired) * scale);
     const finalH = Math.round((src.h || desired) * scale);
 
-    b.setDisplaySize(finalW, finalH);
-    b.setPosition(x, y);
-    b.setActive(true);
-    b.setVisible(true);
-    b.type = type;
-    b._spawnTime = this.time.now;
+    bonus.setDisplaySize(finalW, finalH);
+    bonus.setPosition(x, y);
+    bonus.setActive(true);
+    bonus.setVisible(true);
+    bonus.type = type;
+    bonus._spawnTime = this.time.now;
 
-    if (b.body) {
-      b.body.setSize(finalW, finalH);
-      b.body.setVelocityX(velocityX);
+    if (bonus.body) {
+      bonus.body.setSize(finalW, finalH);
+      bonus.setVelocityX(velocityX);
     }
 
     // Лёгкая анимация проявления — бонус гарантированно «виден» и заметен
-    b.setAlpha(0);
+    bonus.setAlpha(0);
     this.tweens.add({
-      targets: b,
+      targets: bonus,
       alpha: 1,
       scale: { from: 0.9, to: 1 },
       duration: 180,
       ease: 'Back.Out'
     });
 
-    return b;
+    return bonus;
   }
 
   releaseBonus(b) {
@@ -378,12 +396,12 @@ export default class GameScene extends Phaser.Scene {
     pair.topBody.setPosition(spawnX, topCenterY);
     pair.topBody.body.setSize(this.pipeWidth, topHeight);
     pair.topBody.body.setVelocityX(vx);
-    pair.topBody.body.setOffset(-this.pipeWidth / 2, -topHeight / 2);
 
     pair.topSprite.setDisplaySize(this.pipeWidth, topHeight);
     pair.topSprite.setTileScale(1, 1);
     pair.topSprite.setPosition(spawnX, topCenterY).setVisible(true);
 
+    // Кепка
     pair.topCap.setDisplaySize(this.pipeWidth * 1.05, Math.round(this.pipeWidth * 0.45));
     pair.topCap.setPosition(spawnX, topCenterY + topHeight / 2 - (pair.topCap.displayHeight / 2)).setVisible(true);
 
@@ -392,12 +410,12 @@ export default class GameScene extends Phaser.Scene {
     pair.bottomBody.setPosition(spawnX, bottomCenterY);
     pair.bottomBody.body.setSize(this.pipeWidth, bottomHeight);
     pair.bottomBody.body.setVelocityX(vx);
-    pair.bottomBody.body.setOffset(-this.pipeWidth / 2, -bottomHeight / 2);
 
     pair.bottomSprite.setDisplaySize(this.pipeWidth, bottomHeight);
     pair.bottomSprite.setTileScale(1, 1);
     pair.bottomSprite.setPosition(spawnX, bottomCenterY).setVisible(true);
 
+    // Кепка
     pair.bottomCap.setDisplaySize(this.pipeWidth * 1.05, Math.round(this.pipeWidth * 0.45));
     pair.bottomCap.setPosition(spawnX, bottomCenterY - bottomHeight / 2 + (pair.bottomCap.displayHeight / 2)).setVisible(true);
 
@@ -412,7 +430,7 @@ export default class GameScene extends Phaser.Scene {
     const prevGapCenter = this.lastGapCenter;
 
     this.pairsSinceLastBonus++;
-    const shouldSpawnBonus = (this.pairsSinceLastBonus >= 10 && Phaser.Math.Between(0, 2) === 0) || (this.pairsSinceLastBonus >= 12);
+    const shouldSpawnBonus = (this.pairsSinceLastBonus >= 10 && Phaser.Math.Between(0, 2) === 0) || (this.pairsSinceLastBonus >= 3);
 
     if (shouldSpawnBonus) {
       this.pairsSinceLastBonus = 0;
