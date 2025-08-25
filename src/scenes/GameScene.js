@@ -248,10 +248,12 @@ export default class GameScene extends Phaser.Scene {
         .setScrollFactor(1);
 
       this.physics.add.existing(b);
-      b.body.setAllowGravity(false);
-      b.body.setImmovable(true);
+      b.body.setAllowGravity(true);
+      b.body.setGravityY(this._gravity * 0.3); // Бонусы падают медленнее игрока
+      b.body.setImmovable(false);
       b.type = null;
       b._spawnTime = 0;
+      b._isBeingCollected = false; // Инициализируем флаг сбора
 
       this.bonusPool.push(b);
       this.bonusesGroup.add(b);
@@ -285,6 +287,7 @@ export default class GameScene extends Phaser.Scene {
       bonus.body.setAllowGravity(false);
       bonus.body.setImmovable(true);
       bonus._spawnTime = 0;
+      bonus._isBeingCollected = false; // Инициализируем флаг сбора
 
       this.bonusPool.push(bonus);
       this.bonusesGroup.add(bonus);
@@ -312,7 +315,7 @@ export default class GameScene extends Phaser.Scene {
 
     if (bonus.body) {
       bonus.body.setSize(finalW, finalH);
-      bonus.setVelocityX(velocityX);
+      bonus.body.setVelocityX(velocityX);
     }
 
     // Лёгкая анимация проявления — бонус гарантированно «виден» и заметен
@@ -334,6 +337,7 @@ export default class GameScene extends Phaser.Scene {
     b.setVisible(false);
     b.setPosition(-2000, -2000);
     b.type = null;
+    b._isBeingCollected = false; // Сбрасываем флаг сбора
     if (b.body) b.body.setVelocityX(0);
   }
 
@@ -344,8 +348,9 @@ export default class GameScene extends Phaser.Scene {
 
     if (prevX == null || prevGapCenter == null) {
       const base = currGapCenter || (this.h / 2);
-      const minY = Math.max(Math.round(this.h * 0.12), base - gapSize / 2 + margin);
-      const maxY = Math.min(Math.round(this.h * 0.88), base + gapSize / 2 - margin);
+      // Бонус падает сверху вниз - начинаем с верхней части экрана
+      const minY = Math.max(Math.round(this.h * 0.05), base - gapSize / 2 + margin);
+      const maxY = Math.min(Math.round(this.h * 0.25), base + gapSize / 2 - margin);
       return Phaser.Math.Between(minY, maxY);
     }
 
@@ -355,13 +360,14 @@ export default class GameScene extends Phaser.Scene {
     const t = Phaser.Math.Clamp((bonusX - prevX) / denom, 0, 1);
     const blendedCenter = Phaser.Math.Interpolation.Linear([prevGapCenter, currGapCenter], t);
 
-    const minY = Math.max(Math.round(this.h * 0.08), blendedCenter - gapSize / 2 + margin);
-    const maxY = Math.min(Math.round(this.h * 0.92), blendedCenter + gapSize / 2 - margin);
+    // Бонус падает сверху вниз - ограничиваем верхнюю область
+    const minY = Math.max(Math.round(this.h * 0.05), blendedCenter - gapSize / 2 + margin);
+    const maxY = Math.min(Math.round(this.h * 0.25), blendedCenter + gapSize / 2 - margin);
 
     // Если интервал деградировал, слегка расширяем
     if (maxY - minY < 24) {
       const expand = 40;
-      return Phaser.Math.Clamp(Math.round(blendedCenter + Phaser.Math.Between(-expand, expand)), Math.round(this.h * 0.08), Math.round(this.h * 0.92));
+      return Phaser.Math.Clamp(Math.round(blendedCenter + Phaser.Math.Between(-expand, expand)), Math.round(this.h * 0.05), Math.round(this.h * 0.25));
     }
 
     return Phaser.Math.Between(Math.round(minY), Math.round(maxY));
@@ -520,7 +526,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   onCollectBonus(player, bonus) {
-    if (!bonus.active) return;
+    // Дополнительная защита от повторного срабатывания
+    if (!bonus.active || bonus._isBeingCollected) return;
+    bonus._isBeingCollected = true;
+    
     const type = bonus.type;
     switch (type) {
       case 'bonus_life':
