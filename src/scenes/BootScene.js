@@ -8,6 +8,10 @@ export default class BootScene extends Phaser.Scene {
   preload() {
     // Backgrounds, birds, pipes, bonuses, UI buttons
 
+    this.load.audio('bgMusic', [
+      'src/assets/background.mp3',
+    ]);
+
     this.load.svg('background-day', '/src/assets/background-day.svg');
     this.load.svg('background-night', '/src/assets/background-night.svg');
     this.load.svg('background-space', '/src/assets/background-space.svg');
