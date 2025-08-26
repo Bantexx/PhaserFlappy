@@ -19,4 +19,5 @@ export const DIFFICULTY = {
     }
   };
 
-  export const SPEED_INCREASE_EVERY = 10; // каждые X очков увеличиваем скорость
+  export const SPEED_INCREASE_EVERY_SCORE = 10; // каждые X очков увеличиваем скорость
+  export const SPEED_INCREASE = 20; // на сколько увеличить

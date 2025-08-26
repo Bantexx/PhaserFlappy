@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { DIFFICULTY, SPEED_INCREASE_EVERY } from '../config.js';
+import { DIFFICULTY, SPEED_INCREASE_EVERY_SCORE, SPEED_INCREASE } from '../config.js';
 import Leaderboard from '../lib/Leaderboard.js';
 import TelegramWrapper from '../lib/TelegramWrapper.js';
 import EventBus from '../lib/EventBus.js';
@@ -18,7 +18,7 @@ export default class GameScene extends Phaser.Scene {
     this.score = typeof data.score === 'number' ? data.score : 0;
     this.livesCount = typeof data.livesCount === 'number' ? data.livesCount : this.difficulty.lives;
     this.pipeSpeed = typeof data.pipeSpeed === 'number' ? data.pipeSpeed : this.difficulty.pipeSpeed;
-    this.nextSpeedIncreaseAt = typeof data.nextSpeedIncreaseAt === 'number' ? data.nextSpeedIncreaseAt : SPEED_INCREASE_EVERY;
+    this.nextSpeedIncreaseAt = typeof data.nextSpeedIncreaseAt === 'number' ? data.nextSpeedIncreaseAt : SPEED_INCREASE_EVERY_SCORE;
 
     // Вспомогательные параметры для сглаженного управления
     this._scaleY = 1;               // будет выставлен в create() на основе высоты экрана
@@ -607,7 +607,8 @@ export default class GameScene extends Phaser.Scene {
       pair.bottomBody.body.setVelocityX(vx);
     }
     this.bonusesGroup.children.iterate((b) => {
-      if (b && b.body && b.active) b.body.setVelocityX(vx);
+      if (b && b.body && b.active) 
+        b.body.setVelocityX(vx);
     });
   }
 
@@ -702,8 +703,8 @@ export default class GameScene extends Phaser.Scene {
     this.emitHUD();
 
     if (this.score >= this.nextSpeedIncreaseAt) {
-      this.pipeSpeed = Math.round(this.pipeSpeed + 20);
-      this.nextSpeedIncreaseAt += SPEED_INCREASE_EVERY;
+      this.pipeSpeed = Math.round(this.pipeSpeed + SPEED_INCREASE);
+      this.nextSpeedIncreaseAt += SPEED_INCREASE_EVERY_SCORE;
       this.updateWorldVelocity();
       this.scheduleNextSpawn();
     }
