@@ -9,9 +9,9 @@ export default class MenuScene extends Phaser.Scene {
     const w = this.scale.width;
     const h = this.scale.height;
 
-    this.sound.stopAll();
+    /*this.sound.stopAll();npm 
     this.bgMusic = this.sound.add('bgMusic', { loop: true, volume: 0.5 });
-    this.bgMusic.play();
+    this.bgMusic.play();*/
 
     this.add.image(w / 2, h / 2, 'background-day').setDisplaySize(w, h);
 
