@@ -14,9 +14,9 @@ const PHONE_HEIGHT = window.innerHeight * window.devicePixelRatio;
 const config = {
   type: Phaser.AUTO,
   parent: 'game-container',
-  width: PHONE_WIDTH,
-  height: PHONE_HEIGHT,
   backgroundColor: '#87ceeb',
+  width: 720,
+  height: 1280,
   physics: {
     default: 'arcade',
     arcade: {
@@ -33,24 +33,4 @@ const config = {
 
 window.addEventListener('load', () => {
   const game = new Phaser.Game(config);
-
-  // resize canvas when window resizes to maintain fit in container
-  window.addEventListener('resize', () => {
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-    const windowRatio = windowWidth / windowHeight;
-    const gameRatio = config.width / config.height;
-
-    var width = 0;
-    var height = 0;
-
-    if (windowRatio < gameRatio) {
-      width = windowWidth;
-      height = (windowWidth / gameRatio);
-    } else {
-      width = (windowHeight * gameRatio);
-      height = windowHeight;
-    }
-    game.scale.resize(width, height);
-  });
 });
