@@ -71,14 +71,14 @@ export default class GameScene extends Phaser.Scene {
     this.player.setDisplaySize(Math.round(this.w * 0.15), Math.round(this.h * 0.08));
 
     // Настройка хитбокса
-    const hitboxWidth = this.player.displayWidth * 0.8; // 80% от ширины спрайта
-    const hitboxHeight = this.player.displayHeight * 0.6; // 60% от высоты спрайта
+    const hitboxWidth = this.player.displayWidth * 0.38; // 80% от ширины спрайта
+    const hitboxHeight = this.player.displayHeight * 0.26; // 60% от высоты спрайта
     this.player.body.setSize(hitboxWidth, hitboxHeight);
 
     // Центрирование хитбокса относительно спрайта
-    const offsetX = (this.player.displayWidth - hitboxWidth);
+    /*const offsetX = (this.player.displayWidth - hitboxWidth);
     const offsetY = (this.player.displayHeight - hitboxHeight) / 4;
-    this.player.body.setOffset(offsetX, offsetY);
+    this.player.body.setOffset(offsetX, offsetY);*/
 
     this.player.setCollideWorldBounds(true);
     this.player.body.setAllowGravity(true);

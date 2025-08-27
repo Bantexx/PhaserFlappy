@@ -8,8 +8,8 @@ import GameOverScene from './scenes/GameOverScene.js';
 import LeaderboardScene from './scenes/LeaderboardScene.js';
 
 // Logical phone size (portrait)
-const PHONE_WIDTH = 360;
-const PHONE_HEIGHT = 760;
+const PHONE_WIDTH = window.innerWidth * window.devicePixelRatio;
+const PHONE_HEIGHT = window.innerHeight * window.devicePixelRatio;
 
 const config = {
   type: Phaser.AUTO,
@@ -21,7 +21,7 @@ const config = {
     default: 'arcade',
     arcade: {
       gravity: { y: 0 },
-      debug: false
+      debug: true
     }
   },
   scale: {
@@ -36,6 +36,21 @@ window.addEventListener('load', () => {
 
   // resize canvas when window resizes to maintain fit in container
   window.addEventListener('resize', () => {
-    game.scale.resize(PHONE_WIDTH, PHONE_HEIGHT);
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const windowRatio = windowWidth / windowHeight;
+    const gameRatio = config.width / config.height;
+
+    var width = 0;
+    var height = 0;
+
+    if (windowRatio < gameRatio) {
+      width = windowWidth;
+      height = (windowWidth / gameRatio);
+    } else {
+      width = (windowHeight * gameRatio);
+      height = windowHeight;
+    }
+    game.scale.resize(width, height);
   });
 });
